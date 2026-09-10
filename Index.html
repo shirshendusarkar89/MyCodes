@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Global Country & Weather Intelligence Dashboard</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --accent: #2563eb;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.25rem;
+            margin: 0.25rem 0 0.75rem 0;
+        }
+
+        .controls-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            width: 100%;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.15rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 13px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background-color: #fff;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            display: none;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .app-icon {
+            width: 54px;
+            height: 54px;
+            background: #f0f9ff;
+            border-radius: 12px;
+            border: 2px solid #bae6fd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .app-icon svg {
+            width: 44px;
+            height: 44px;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+
+        .category-section {
+            margin-bottom: 0.75rem;
+        }
+
+        .category-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 2px;
+            margin-bottom: 0.35rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-title:hover {
+            color: var(--primary);
+        }
+
+        .category-title:active {
+            opacity: 0.85;
+        }
+
+        .collapsible-content {
+            display: none;
+            margin-top: 0.35rem;
+        }
+
+
+        .facility-section {
+            margin-top: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .facility-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 2px;
+            margin-bottom: 0.35rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .facility-location-choice {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.55rem;
+            margin: 0.75rem 0;
+        }
+
+        .facility-location-choice label {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: var(--primary);
+        }
+
+        .facility-location-choice select {
+            background: #fff;
+        }
+
+        .location-source-note {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .location-timer-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none !important;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.48);
+            pointer-events: auto;
+            backdrop-filter: blur(3px);
+        }
+
+        .location-timer-card {
+            width: min(280px, calc(100vw - 40px));
+            padding: 1.25rem;
+            border-radius: 16px;
+            text-align: center;
+            color: #fff;
+            background: linear-gradient(145deg, #0f172a, #1e3a8a);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+
+        .location-orb {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 0.75rem;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.35);
+            position: relative;
+            animation: locationPulse 1.2s ease-in-out infinite;
+        }
+
+        .location-orb::before, .location-orb::after {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.65);
+            animation: locationSpin 2s linear infinite;
+        }
+
+        .location-orb::after {
+            inset: 18px;
+            animation-direction: reverse;
+            animation-duration: 1.3s;
+        }
+
+        .location-timer-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .location-timer-seconds {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-top: 0.2rem;
+        }
+
+        .location-timer-message {
+            font-size: 0.68rem;
+            opacity: 0.85;
+            margin-top: 0.25rem;
+        }
+
+        @keyframes locationPulse {
+            0%, 100% { transform: scale(0.94); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        @keyframes locationSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .facility-title:hover { color: var(--primary); }
+        .facility-title:active { opacity: 0.85; }
+
+        .facility-content {
+            display: none;
+            margin-top: 0.35rem;
+        }
+
+        .facility-panel {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.5rem;
+        }
+
+        .facility-status {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+
+        .facility-select-wrap {
+            margin: 0.45rem 0 0.55rem;
+        }
+
+        .facility-select-wrap label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .facility-select-wrap select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fff;
+            font-size: 0.75rem;
+            color: var(--text);
+        }
+
+        .inline-location-timer {
+            display: none;
+            align-items: center;
+            gap: 0.55rem;
+            margin: 0.45rem 0 0.55rem;
+            padding: 0.55rem 0.65rem;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #0f172a, #1e3a8a);
+            color: #fff;
+        }
+
+        .inline-location-timer.active {
+            display: flex;
+        }
+
+        .inline-location-orb {
+            width: 28px;
+            height: 28px;
+            flex: 0 0 28px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.55);
+            animation: locationPulse 1.2s ease-in-out infinite;
+        }
+
+        .inline-location-timer-text {
+            min-width: 0;
+            font-size: 0.68rem;
+            line-height: 1.25;
+        }
+
+        .inline-location-timer-seconds {
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        .facility-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+
+        .location-btn, .route-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 8px;
+            border: 0;
+            border-radius: 6px;
+            background: var(--accent);
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .location-btn:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+
+        .route-btn {
+            background: var(--primary);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.35rem;
+        }
+
+        .data-item {
+            background-color: var(--background);
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .data-label {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 0.1rem;
+            font-weight: 600;
+        }
+
+        .data-value {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-main);
+            word-break: break-word;
+        }
+        
+        .highlight-item {
+            background-color: #eff6ff;
+            border-color: #bfdbfe;
+            grid-column: span 3;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border-radius: 8px;
+            border: 1px dashed var(--border);
+            font-size: 0.85rem;
+        }
+
+        .sources-section {
+            background: #fff;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .sources-section h3 {
+            margin: 0 0 0.35rem 0;
+            font-size: 0.75rem;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        .sources-section ul {
+            margin: 0;
+            padding-left: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .highlight-item {
+                grid-column: span 2;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Global Country Intelligence Dashboard</h1>
+        
+        <div class="controls-row">
+            <div class="control-group">
+                <label>Select Target Country</label>
+                <select id="countrySelect" onchange="handleTargetCountryChange()">
+                    <option value="" disabled selected>-- Choose Target --</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>I Am From (Your Country)</label>
+                <select id="homeCountrySelect" onchange="updateDashboard()">
+                    <option value="" disabled selected>-- Choose Home --</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+            Select a Target Country and Your Home Country above to view categorical data and currency comparisons.
+        </div>
+
+        <div id="infoCard" class="card">
+            <div class="card-header">
+                <div class="app-icon">
+                    <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <radialGradient id="globeGrad" cx="35%" cy="35%" r="70%" fx="30%" fy="30%">
+                          <stop offset="0%" stop-color="#38bdf8" />
+                          <stop offset="50%" stop-color="#0284c7" />
+                          <stop offset="100%" stop-color="#0369a1" />
+                        </radialGradient>
+                        <radialGradient id="glossGrad" cx="30%" cy="20%" r="40%">
+                          <stop offset="0%" stop-color="white" stop-opacity="0.6" />
+                          <stop offset="100%" stop-color="white" stop-opacity="0" />
+                        </radialGradient>
+                        <filter id="shadow3d" x="-20%" y="-20%" width="140%" height="140%">
+                          <feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#0f172a" flood-opacity="0.35"/>
+                          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0f172a" flood-opacity="0.2"/>
+                        </filter>
+                        <filter id="pinShadow" x="-30%" y="-30%" width="160%" height="160%">
+                          <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.4"/>
+                        </filter>
+                        <linearGradient id="badgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stop-color="#f59e0b" />
+                          <stop offset="100%" stop-color="#d97706" />
+                        </linearGradient>
+                      </defs>
+                      <g filter="url(#shadow3d)">
+                        <circle cx="50" cy="52" r="38" fill="url(#globeGrad)" />
+                        <path d="M22 42C30 35 45 38 58 45C71 52 78 42 78 42C78 42 72 68 55 70C38 72 25 58 22 42Z" fill="#10b981" fill-opacity="0.75" />
+                        <path d="M30 65C38 62 48 70 52 75C45 78 35 75 30 65Z" fill="#059669" fill-opacity="0.85" />
+                        <ellipse cx="50" cy="52" rx="38" ry="16" stroke="#bae6fd" stroke-opacity="0.3" stroke-width="2" fill="none" transform="rotate(-15 50 52)" />
+                        <ellipse cx="50" cy="52" rx="16" ry="38" stroke="#bae6fd" stroke-opacity="0.3" stroke-width="2" fill="none" transform="rotate(-15 50 52)" />
+                        <circle cx="50" cy="52" r="38" fill="url(#glossGrad)" />
+                      </g>
+                      <g transform="translate(12, -4)" filter="url(#pinShadow)">
+                        <circle cx="62" cy="30" r="14" fill="url(#badgeGrad)" />
+                        <circle cx="62" cy="30" r="10" fill="#b45309" fill-opacity="0.3" />
+                        <text x="62" y="35" font-family="Arial, sans-serif" font-weight="bold" font-size="15" fill="#ffffff" text-anchor="middle">$</text>
+                        <path d="M58 40L62 48L66 40Z" fill="#d97706" />
+                      </g>
+                    </svg>
+                </div>
+                <div>
+                    <h2 id="countryName">Country Name</h2>
+                </div>
+            </div>
+            
+            <!-- GEOGRAPHY -->
+            <div class="category-section">
+                <div class="category-title" onclick="toggleSection('geographyCollapsibleContent', 'geographyToggleIcon')"><span>Geography</span><span id="geographyToggleIcon">▼ Click to Expand</span></div>
+                <div id="geographyCollapsibleContent" class="collapsible-content">
+                <div class="grid">
+                    <div class="data-item"><div class="data-label">1. Area</div><div class="data-value" id="geoArea">--</div></div>
+                    <div class="data-item"><div class="data-label">2. Land Area</div><div class="data-value" id="geoLand">--</div></div>
+                    <div class="data-item"><div class="data-label">3. Cultivable Land</div><div class="data-value" id="geoCultivable">--</div></div>
+                    <div class="data-item"><div class="data-label">4. Capital City</div><div class="data-value" id="geoCapital">--</div></div>
+                    <div class="data-item"><div class="data-label">5. Major Cities</div><div class="data-value" id="geoMajorCities">--</div></div>
+                    <div class="data-item"><div class="data-label">6. Major Airports</div><div class="data-value" id="geoAirports">--</div></div>
+                </div>
+                </div>
+            </div>
+
+            <!-- GENERAL WEATHER TREND -->
+            <div class="category-section">
+                <div class="category-title" onclick="toggleSection('trendCollapsibleContent', 'trendToggleIcon')"><span>General Weather Trend</span><span id="trendToggleIcon">▼ Click to Expand</span></div>
+                <div id="trendCollapsibleContent" class="collapsible-content">
+                <div class="grid">
+                    <div class="data-item"><div class="data-label">1. Max/Min Temperature</div><div class="data-value" id="trendTemp">--</div></div>
+                    <div class="data-item"><div class="data-label">2. Max/Min Humidity</div><div class="data-value" id="trendHumidity">--</div></div>
+                    <div class="data-item"><div class="data-label">3. Max/Min Rainfall</div><div class="data-value" id="trendRain">--</div></div>
+                    <div class="data-item"><div class="data-label">4. Max/Min Snowfall</div><div class="data-value" id="trendSnow">--</div></div>
+                    <div class="data-item"><div class="data-label">5. Max/Min Windspeed</div><div class="data-value" id="trendWind">--</div></div>
+                </div>
+                </div>
+            </div>
+
+            <!-- WEATHER PREDICTION FOR CAPITAL AS OF TODAY -->
+            <div class="category-section">
+                <div class="category-title" id="weatherPredictionTitle" onclick="toggleSection('weatherPredictionCollapsibleContent', 'weatherPredictionToggleIcon')"><span id="weatherPredictionLabel">Weather Prediction as of Today</span><span id="weatherPredictionToggleIcon">▼ Click to Expand</span></div>
+                <div id="weatherPredictionCollapsibleContent" class="collapsible-content">
+                <div class="grid">
+                    <div class="data-item"><div class="data-label">1. Temperature</div><div class="data-value" id="predTemp">--</div></div>
+                    <div class="data-item"><div class="data-label">2. Humidity</div><div class="data-value" id="predHumidity">--</div></div>
+                    <div class="data-item"><div class="data-label">3. Rainfall</div><div class="data-value" id="predRain">--</div></div>
+                    <div class="data-item"><div class="data-label">4. Snowfall</div><div class="data-value" id="predSnow">--</div></div>
+                    <div class="data-item"><div class="data-label">5. Visibility</div><div class="data-value" id="predVisibility">--</div></div>
+                </div>
+                </div>
+            </div>
+
+            <!-- CAPITAL CITY MAP & STREET VIEW -->
+            <div class="category-section">
+                <div class="category-title" id="mapSectionTitle" onclick="toggleMapSection()">
+                    <span>Capital City Map & 3D Street View</span>
+                    <span id="mapToggleIcon">▼ Click to Expand</span>
+                </div>
+                <div id="mapCollapsibleContent" class="collapsible-content">
+                    <div style="position: relative; width: 100%; height: 280px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 0.5rem;">
+                        <iframe id="mapIframe" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src=""></iframe>
+                    </div>
+                    <a id="streetViewBtn" href="#" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 8px; background-color: var(--accent); color: #fff; text-decoration: none; font-size: 0.75rem; font-weight: 600; border-radius: 6px; text-transform: uppercase; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                        🌐 Open 3D Street View of Capital
+                    </a>
+                </div>
+            </div>
+
+            <!-- ECONOMY -->
+            <div class="category-section">
+                <div class="category-title" onclick="toggleSection('economyCollapsibleContent', 'economyToggleIcon')"><span>Economy</span><span id="economyToggleIcon">▼ Click to Expand</span></div>
+                <div id="economyCollapsibleContent" class="collapsible-content">
+                <div class="grid">
+                    <div class="data-item"><div class="data-label">1. Currency</div><div class="data-value" id="econCurrency">--</div></div>
+                    <div class="data-item"><div class="data-label">2. GDP</div><div class="data-value" id="econGdp">--</div></div>
+                    <div class="data-item"><div class="data-label">3. Gross Export</div><div class="data-value" id="econExport">--</div></div>
+                    <div class="data-item"><div class="data-label">4. Gross Import</div><div class="data-value" id="econImport">--</div></div>
+                    <div class="data-item"><div class="data-label">5. Per Capita Income</div><div class="data-value" id="econPerCapita">--</div></div>
+                    <div class="data-item"><div class="data-label">6. Cost of Living (Local)</div><div class="data-value" id="econCostOfLiving">--</div></div>
+                    <div class="data-item"><div class="data-label">7. Total Internal Debt</div><div class="data-value" id="econInternalDebt">--</div></div>
+                    <div class="data-item"><div class="data-label">8. Total External Debt</div><div class="data-value" id="econExternalDebt">--</div></div>
+                    <div class="data-item"><div class="data-label">9. Major Banks</div><div class="data-value" id="econBanks">--</div></div>
+                    
+                    <!-- Currency Comparison Implementation -->
+                    <div class="data-item highlight-item">
+                        <div class="data-label">10. Target Currency equivalent in Home Currency</div>
+                        <div class="data-value" id="currTargetToHome" style="color:#0369a1; font-weight:700;">Select Home Country...</div>
+                    </div>
+                    <div class="data-item highlight-item">
+                        <div class="data-label">11. Home Currency equivalent in Target Currency</div>
+                        <div class="data-value" id="currHomeToTarget" style="color:#0369a1; font-weight:700;">Select Home Country...</div>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- SOCIETY -->
+            <div class="category-section">
+                <div class="category-title" onclick="toggleSection('societyCollapsibleContent', 'societyToggleIcon')"><span>Society</span><span id="societyToggleIcon">▼ Click to Expand</span></div>
+                <div id="societyCollapsibleContent" class="collapsible-content">
+                <div class="grid">
+                    <div class="data-item"><div class="data-label">1. Total Population</div><div class="data-value" id="socPopulation">--</div></div>
+                    <div class="data-item"><div class="data-label">2. Staple Food</div><div class="data-value" id="socFood">--</div></div>
+                    <div class="data-item"><div class="data-label">3. Population Trend</div><div class="data-value" id="socTrend">--</div></div>
+                    <div class="data-item"><div class="data-label">4. Major Languages</div><div class="data-value" id="socLanguages">--</div></div>
+                    <div class="data-item"><div class="data-label">5. Literacy Rate</div><div class="data-value" id="socLiteracy">--</div></div>
+                    <div class="data-item"><div class="data-label">6. Female to Male Ratio</div><div class="data-value" id="socRatio">--</div></div>
+                    <div class="data-item"><div class="data-label">7. Happiness Index</div><div class="data-value" id="socHappiness">--</div></div>
+                </div>
+                </div>
+            </div>
+
+
+
+            <!-- LOCATION REFERENCE FOR NEAREST FACILITY SEARCH -->
+            <div class="facility-location-choice">
+                <label for="facilityLocationMode">Nearest Airport / Railway Station — Search From</label>
+                <select id="facilityLocationMode">
+                    <option value="target">The Target Country</option>
+                    <option value="my">My Location</option>
+                </select>
+                <div class="location-source-note" id="facilityLocationModeNote">The selected target country's capital will be used as the reference location.</div>
+            </div>
+
+            <!-- NEAREST AIRPORT PATH FROM SELECTED LOCATION -->
+            <div class="facility-section">
+                <div class="facility-title" onclick="toggleFacilitySection('airportPathContent', 'airportPathIcon')">
+                    <span>✈️ Nearest Airport Path from Selected Location</span>
+                    <span id="airportPathIcon">▼ Click to Expand</span>
+                </div>
+                <div id="airportPathContent" class="facility-content">
+                    <div class="facility-panel">
+                        <div class="facility-status" id="worldAirportStatus">Click the button below to locate the nearest airport from the selected reference location.</div>
+                        <div class="facility-select-wrap">
+                            <label for="worldAirportSelect">Choose an Airport Identified in the Target Country</label>
+                            <select id="worldAirportSelect">
+                                <option value="">-- Airports will be identified after the target country is selected --</option>
+                            </select>
+                            <div class="location-source-note">The list is built from the country's airport data and enriched with live OpenStreetMap airport records when available.</div>
+                        </div>
+                        <div class="inline-location-timer" id="airportLocationTimer" aria-live="polite">
+                            <div class="inline-location-orb" aria-hidden="true"></div>
+                            <div class="inline-location-timer-text"><strong>Detecting My Location</strong><br><span id="airportLocationTimerSeconds">0.0 s</span></div>
+                        </div>
+                        <div class="grid">
+                            <div class="data-item"><div class="data-label">1. Reference Location</div><div class="data-value" id="worldUserLocationAirport">--</div></div>
+                            <div class="data-item"><div class="data-label">2. Nearest Airport</div><div class="data-value" id="worldNearestAirport">--</div></div>
+                            <div class="data-item"><div class="data-label">3. Distance</div><div class="data-value" id="worldAirportDistance">--</div></div>
+                        </div>
+                        <div class="facility-actions">
+                            <button type="button" class="location-btn" onclick="findWorldNearestFacility('airport')">🌐 Find Nearest Airport</button>
+                            <a id="worldAirportRoute" class="route-btn" href="#" target="_blank" rel="noopener">Open Route in Google Maps</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEAREST RAILWAY STATION PATH FROM CURRENT LOCATION -->
+            <div class="facility-section">
+                <div class="facility-title" onclick="toggleFacilitySection('railPathContent', 'railPathIcon')">
+                    <span>🚆 Nearest Railway Station Path from Selected Location</span>
+                    <span id="railPathIcon">▼ Click to Expand</span>
+                </div>
+                <div id="railPathContent" class="facility-content">
+                    <div class="facility-panel">
+                        <div class="facility-status" id="worldRailStatus">Click the button below to locate the nearest railway station from the selected reference location.</div>
+                        <div class="inline-location-timer" id="railLocationTimer" aria-live="polite">
+                            <div class="inline-location-orb" aria-hidden="true"></div>
+                            <div class="inline-location-timer-text"><strong>Detecting My Location</strong><br><span id="railLocationTimerSeconds">0.0 s</span></div>
+                        </div>
+                        <div class="grid">
+                            <div class="data-item"><div class="data-label">1. Reference Location</div><div class="data-value" id="worldUserLocationRail">--</div></div>
+                            <div class="data-item"><div class="data-label">2. Nearest Railway Station</div><div class="data-value" id="worldNearestRail">--</div></div>
+                            <div class="data-item"><div class="data-label">3. Distance</div><div class="data-value" id="worldRailDistance">--</div></div>
+                        </div>
+                        <div class="facility-actions">
+                            <button type="button" class="location-btn" onclick="findWorldNearestFacility('rail')">🌐 Find Nearest Railway Station</button>
+                            <a id="worldRailRoute" class="route-btn" href="#" target="_blank" rel="noopener">Open Route in Google Maps</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="sources-section">
+            <h3>Sources</h3>
+            <ul>
+                <li>World Bank Open Data & World Development Indicators[cite: 1]</li>
+                <li>International Monetary Fund (IMF) World Economic Outlook[cite: 1]</li>
+                <li>Open-Meteo Weather & Climatology Forecast API[cite: 1]</li>
+                <li>FAOSTAT / UN Demographic Yearbook[cite: 1]</li>
+                <li>World Happiness Report[cite: 1]</li>
+                <li>Live Foreign Exchange Rates & Accurate Reference Data</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="locationTimerOverlay" class="location-timer-overlay" aria-live="polite" aria-busy="false">
+        <div class="location-timer-card">
+            <div class="location-orb" aria-hidden="true"></div>
+            <div class="location-timer-title">Detecting My Location</div>
+            <div class="location-timer-seconds" id="locationTimerSeconds">0 s</div>
+            <div class="location-timer-message">Please allow the browser to determine your current location.</div>
+        </div>
+    </div>
+
+    <script>
+        const countryData = {
+            "Afghanistan": { geo: { area: "652k sq km", land: "652k sq km", cultivable: "79k sq km", capital: "Kabul", majorCities: "Kabul, Kandahar, Herat, Mazar-i-Sharif", airports: "Kabul International Airport, Kandahar International Airport" }, trend: { temp: "-25°C to 45°C", humidity: "10% to 70%", rain: "0mm to 500mm", snow: "0cm to 200cm", wind: "0 to 80 km/h" }, econ: { currency: "Afghan Afghani (AFN)", rateToUSD: 71.5, gdp: "$14.5 Billion", export: "$1.5 Billion", import: "$6 Billion", perCapita: "$350", costOfLiving: "AFN 25,000 / month", internalDebt: "Unknown", externalDebt: "$1.5 Billion", banks: "Da Afghanistan Bank" }, soc: { pop: "42.2 Million", food: "Naan, Rice, Mutton", popTrend: "+2.7% (Increasing)", languages: "Pashto, Dari", literacy: "37%", ratio: "105 M / 100 F", happiness: "143rd / Global Index" } },
+            "Argentina": { geo: { area: "2.78M sq km", land: "2.73M sq km", cultivable: "390k sq km", capital: "Buenos Aires", majorCities: "Buenos Aires, Córdoba, Rosario, Mendoza", airports: "Ministro Pistarini International Airport, Jorge Newbery Airpark" }, trend: { temp: "-30°C to 45°C", humidity: "20% to 90%", rain: "200mm to 2000mm", snow: "0cm to 150cm", wind: "0 to 100 km/h" }, econ: { currency: "Argentine Peso (ARS)", rateToUSD: 900, gdp: "$641 Billion", export: "$88 Billion", import: "$73 Billion", perCapita: "$13,600", costOfLiving: "ARS 350,000 / month", internalDebt: "ARS 40 Trillion", externalDebt: "$275 Billion", banks: "Banco Nación, Banco Galicia" }, soc: { pop: "46.2 Million", food: "Beef, Empanadas", popTrend: "+0.9% (Increasing)", languages: "Spanish", literacy: "99.0%", ratio: "96 M / 100 F", happiness: "52nd / Global Index" } },
+            "Australia": { geo: { area: "7.69M sq km", land: "7.68M sq km", cultivable: "350k sq km", capital: "Canberra", majorCities: "Sydney, Melbourne, Brisbane, Perth, Adelaide", airports: "Sydney Airport, Melbourne Airport, Brisbane Airport" }, trend: { temp: "-10°C to 50°C", humidity: "10% to 95%", rain: "100mm to 3000mm", snow: "0cm to 100cm", wind: "0 to 120 km/h" }, econ: { currency: "Australian Dollar (AUD)", rateToUSD: 1.52, gdp: "$1.74 Trillion", export: "$400 Billion", import: "$290 Billion", perCapita: "$65,000", costOfLiving: "AUD 3,500 / month", internalDebt: "AUD 900 Billion", externalDebt: "$2 Trillion", banks: "CBA, Westpac, ANZ" }, soc: { pop: "26.6 Million", food: "Beef, Seafood", popTrend: "+1.2% (Increasing)", languages: "English", literacy: "99.0%", ratio: "99 M / 100 F", happiness: "12th / Global Index" } },
+            "Brazil": { geo: { area: "8.51M sq km", land: "8.35M sq km", cultivable: "660k sq km", capital: "Brasília", majorCities: "São Paulo, Rio de Janeiro, Brasília, Salvador, Fortaleza", airports: "Guarulhos International Airport, Galeão International Airport, Viracopos International Airport" }, trend: { temp: "-14°C to 44°C", humidity: "50% to 95%", rain: "500mm to 3000mm", snow: "0cm", wind: "0 to 90 km/h" }, econ: { currency: "Brazilian Real (BRL)", rateToUSD: 5.5, gdp: "$2.13 Trillion", export: "$339 Billion", import: "$263 Billion", perCapita: "$10,000", costOfLiving: "R$ 3,000 / month", internalDebt: "R$ 7.5 Trillion", externalDebt: "$600 Billion", banks: "Itaú Unibanco, Banco do Brasil" }, soc: { pop: "216.4 Million", food: "Rice, Beans, Beef", popTrend: "+0.5% (Increasing)", languages: "Portuguese", literacy: "93.2%", ratio: "96 M / 100 F", happiness: "49th / Global Index" } },
+            "Canada": { geo: { area: "9.98M sq km", land: "9.09M sq km", cultivable: "450k sq km", capital: "Ottawa", majorCities: "Toronto, Montreal, Vancouver, Calgary, Ottawa", airports: "Toronto Pearson International Airport, Vancouver International Airport, Montréal-Trudeau International Airport" }, trend: { temp: "-60°C to 40°C", humidity: "20% to 95%", rain: "200mm to 2500mm", snow: "50cm to 600cm", wind: "0 to 110 km/h" }, econ: { currency: "Canadian Dollar (CAD)", rateToUSD: 1.36, gdp: "$2.14 Trillion", export: "$597 Billion", import: "$580 Billion", perCapita: "$53,000", costOfLiving: "CAD 3,200 / month", internalDebt: "CAD 1.2 Trillion", externalDebt: "$2.3 Trillion", banks: "RBC, TD Bank, Scotiabank" }, soc: { pop: "38.9 Million", food: "Bread, Beef, Poutine", popTrend: "+1.1% (Increasing)", languages: "English, French", literacy: "99.0%", ratio: "98 M / 100 F", happiness: "15th / Global Index" } },
+            "China": { geo: { area: "9.60M sq km", land: "9.32M sq km", cultivable: "1.28M sq km", capital: "Beijing", majorCities: "Shanghai, Beijing, Shenzhen, Guangzhou, Chengdu", airports: "Beijing Capital International Airport, Shanghai Pudong International Airport, Guangzhou Baiyun International Airport" }, trend: { temp: "-50°C to 48°C", humidity: "10% to 95%", rain: "50mm to 2000mm", snow: "0cm to 200cm", wind: "0 to 100 km/h" }, econ: { currency: "Chinese Yuan (CNY)", rateToUSD: 7.25, gdp: "$17.7 Trillion", export: "$3.5 Trillion", import: "$2.7 Trillion", perCapita: "$12,500", costOfLiving: "CNY 5,000 / month", internalDebt: "CNY 250 Trillion", externalDebt: "$2.4 Trillion", banks: "ICBC, China Construction Bank" }, soc: { pop: "1.41 Billion", food: "Rice, Wheat, Pork", popTrend: "-0.1% (Decreasing)", languages: "Mandarin Chinese", literacy: "96.8%", ratio: "104 M / 100 F", happiness: "64th / Global Index" } },
+            "Denmark": { geo: { area: "42.9k sq km", land: "42.2k sq km", cultivable: "26k sq km", capital: "Copenhagen", majorCities: "Copenhagen, Aarhus, Odense, Aalborg", airports: "Copenhagen Airport, Billund Airport" }, trend: { temp: "-15°C to 35°C", humidity: "50% to 95%", rain: "500mm to 900mm", snow: "0cm to 30cm", wind: "5 to 110 km/h" }, econ: { currency: "Danish Krone (DKK)", rateToUSD: 6.85, gdp: "$400 Billion", export: "$130 Billion", import: "$120 Billion", perCapita: "$68,000", costOfLiving: "DKK 15,000 / month", internalDebt: "DKK 300 Billion", externalDebt: "$500 Billion", banks: "Danske Bank, Nordea" }, soc: { pop: "5.9 Million", food: "Pork, Rye Bread", popTrend: "+0.4% (Increasing)", languages: "Danish", literacy: "99.0%", ratio: "98 M / 100 F", happiness: "2nd / Global Index" } },
+            "Egypt": { geo: { area: "1.01M sq km", land: "995k sq km", cultivable: "38k sq km", capital: "Cairo", majorCities: "Cairo, Alexandria, Giza, Shubra El Kheima", airports: "Cairo International Airport, Hurghada International Airport, Sharm El Sheikh International Airport" }, trend: { temp: "5°C to 45°C", humidity: "10% to 70%", rain: "0mm to 200mm", snow: "0cm", wind: "0 to 70 km/h" }, econ: { currency: "Egyptian Pound (EGP)", rateToUSD: 48.5, gdp: "$398 Billion", export: "$40 Billion", import: "$80 Billion", perCapita: "$3,700", costOfLiving: "EGP 10,000 / month", internalDebt: "EGP 6 Trillion", externalDebt: "$165 Billion", banks: "National Bank of Egypt" }, soc: { pop: "112.7 Million", food: "Bread, Ful Medames", popTrend: "+1.6% (Increasing)", languages: "Arabic", literacy: "73.1%", ratio: "102 M / 100 F", happiness: "121st / Global Index" } },
+            "France": { geo: { area: "551k sq km", land: "549k sq km", cultivable: "183k sq km", capital: "Paris", majorCities: "Paris, Marseille, Lyon, Toulouse, Nice", airports: "Charles de Gaulle Airport, Orly Airport, Nice Côte d'Azur Airport" }, trend: { temp: "-15°C to 42°C", humidity: "40% to 95%", rain: "500mm to 1200mm", snow: "0cm to 100cm", wind: "0 to 120 km/h" }, econ: { currency: "Euro (EUR)", rateToUSD: 0.859, gdp: "$3.03 Trillion", export: "$600 Billion", import: "$700 Billion", perCapita: "$44,000", costOfLiving: "€ 2,000 / month", internalDebt: "€ 3 Trillion", externalDebt: "$6 Trillion", banks: "BNP Paribas, Crédit Agricole" }, soc: { pop: "68.0 Million", food: "Bread, Cheese, Wine", popTrend: "+0.2% (Increasing)", languages: "French", literacy: "99.0%", ratio: "95 M / 100 F", happiness: "21st / Global Index" } },
+            "Germany": { geo: { area: "357k sq km", land: "348k sq km", cultivable: "117k sq km", capital: "Berlin", majorCities: "Berlin, Hamburg, Munich, Cologne, Frankfurt", airports: "Frankfurt Airport, Munich Airport, Berlin Brandenburg Airport" }, trend: { temp: "-20°C to 40°C", humidity: "40% to 95%", rain: "500mm to 1500mm", snow: "0cm to 100cm", wind: "5 to 110 km/h" }, econ: { currency: "Euro (EUR)", rateToUSD: 0.859, gdp: "$4.46 Trillion", export: "$1.6 Trillion", import: "$1.4 Trillion", perCapita: "$52,000", costOfLiving: "€ 1,800 / month", internalDebt: "€ 2.5 Trillion", externalDebt: "$6.5 Trillion", banks: "Deutsche Bank, Commerzbank" }, soc: { pop: "83.8 Million", food: "Bread, Pork, Potatoes", popTrend: "+0.1% (Increasing)", languages: "German", literacy: "99.0%", ratio: "97 M / 100 F", happiness: "16th / Global Index" } },
+            "Hungary": { geo: { area: "93k sq km", land: "90k sq km", cultivable: "43k sq km", capital: "Budapest", majorCities: "Budapest, Debrecen, Szeged, Miskolc", airports: "Budapest Ferenc Liszt International Airport, Debrecen International Airport" }, trend: { temp: "-20°C to 38°C", humidity: "40% to 90%", rain: "500mm to 800mm", snow: "0cm to 50cm", wind: "0 to 90 km/h" }, econ: { currency: "Hungarian Forint (HUF)", rateToUSD: 360, gdp: "$178 Billion", export: "$150 Billion", import: "$145 Billion", perCapita: "$18,500", costOfLiving: "HUF 300,000 / month", internalDebt: "HUF 45 Trillion", externalDebt: "$120 Billion", banks: "OTP Bank, K&H Bank" }, soc: { pop: "9.6 Million", food: "Goulash, Paprika", popTrend: "-0.2% (Decreasing)", languages: "Hungarian", literacy: "99.4%", ratio: "91 M / 100 F", happiness: "51st / Global Index" } },
+            "India": { geo: { area: "3.28M sq km", land: "2.97M sq km", cultivable: "1.56M sq km", capital: "New Delhi", majorCities: "New Delhi, Mumbai, Bengaluru, Chennai, Kolkata", airports: "Indira Gandhi International Airport, Chhatrapati Shivaji Maharaj International Airport, Kempegowda International Airport, Netaji Subhash Chandra Bose International Airport" }, trend: { temp: "-45°C to 51°C", humidity: "20% to 95%", rain: "0mm to 3000mm", snow: "0cm to 150cm", wind: "0 to 80 km/h" }, econ: { currency: "Indian Rupee (INR)", rateToUSD: 95.12, gdp: "$3.73 Trillion", export: "$437 Billion", import: "$672 Billion", perCapita: "$2,600", costOfLiving: "₹35,000 / month", internalDebt: "₹140 Trillion", externalDebt: "$624 Billion", banks: "SBI, HDFC, ICICI" }, soc: { pop: "1.43 Billion", food: "Rice, Wheat, Lentils", popTrend: "+0.81% (Increasing)", languages: "Hindi, English, Bengali", literacy: "77.7%", ratio: "107 M / 100 F", happiness: "126th / Global Index" } },
+            "Japan": { geo: { area: "377k sq km", land: "364k sq km", cultivable: "43k sq km", capital: "Tokyo", majorCities: "Tokyo, Yokohama, Osaka, Nagoya, Sapporo", airports: "Haneda Airport, Narita International Airport, Kansai International Airport" }, trend: { temp: "-40°C to 41°C", humidity: "40% to 90%", rain: "1000mm to 3500mm", snow: "0cm to 500cm", wind: "0 to 140 km/h" }, econ: { currency: "Japanese Yen (JPY)", rateToUSD: 155, gdp: "$4.21 Trillion", export: "$717 Billion", import: "$810 Billion", perCapita: "$33,800", costOfLiving: "¥220,000 / month", internalDebt: "¥1,250 Trillion", externalDebt: "$4.5 Trillion", banks: "MUFG, SMBC" }, soc: { pop: "123.3 Million", food: "Rice, Seafood, Noodles", popTrend: "-0.5% (Decreasing)", languages: "Japanese", literacy: "99.0%", ratio: "95 M / 100 F", happiness: "51st / Global Index" } },
+            "Kenya": { geo: { area: "580k sq km", land: "569k sq km", cultivable: "55k sq km", capital: "Nairobi", majorCities: "Nairobi, Mombasa, Kisumu, Nakuru", airports: "Jomo Kenyatta International Airport, Moi International Airport" }, trend: { temp: "10°C to 35°C", humidity: "30% to 85%", rain: "200mm to 1500mm", snow: "0cm", wind: "0 to 60 km/h" }, econ: { currency: "Kenyan Shilling (KES)", rateToUSD: 130, gdp: "$113 Billion", export: "$7 Billion", import: "$20 Billion", perCapita: "$2,000", costOfLiving: "KES 50,000 / month", internalDebt: "KES 5 Trillion", externalDebt: "$38 Billion", banks: "KCB Group, Equity Bank" }, soc: { pop: "55.1 Million", food: "Ugali, Sukuma Wiki", popTrend: "+1.9% (Increasing)", languages: "Swahili, English", literacy: "82.6%", ratio: "99 M / 100 F", happiness: "111th / Global Index" } },
+            "Lebanon": { geo: { area: "10.4k sq km", land: "10.2k sq km", cultivable: "1.3k sq km", capital: "Beirut", majorCities: "Beirut, Tripoli, Sidon, Tyre", airports: "Beirut-Rafic Hariri International Airport" }, trend: { temp: "0°C to 38°C", humidity: "40% to 85%", rain: "200mm to 900mm", snow: "0cm to 150cm (Mountains)", wind: "0 to 70 km/h" }, econ: { currency: "Lebanese Pound (LBP)", rateToUSD: 89500, gdp: "$20 Billion", export: "$3 Billion", import: "$15 Billion", perCapita: "$3,500", costOfLiving: "LBP 80M / month", internalDebt: "LBP 100 Trillion", externalDebt: "$40 Billion", banks: "Bank Audi, BLOM Bank" }, soc: { pop: "5.4 Million", food: "Tabbouleh, Kibbeh", popTrend: "-1.5% (Decreasing)", languages: "Arabic", literacy: "95.1%", ratio: "96 M / 100 F", happiness: "142nd / Global Index" } },
+            "Mexico": { geo: { area: "1.96M sq km", land: "1.94M sq km", cultivable: "240k sq km", capital: "Mexico City", majorCities: "Mexico City, Guadalajara, Monterrey, Puebla", airports: "Mexico City International Airport, Cancún International Airport, Guadalajara International Airport" }, trend: { temp: "-10°C to 45°C", humidity: "20% to 90%", rain: "200mm to 2500mm", snow: "0cm to 20cm", wind: "0 to 100 km/h" }, econ: { currency: "Mexican Peso (MXN)", rateToUSD: 16.5, gdp: "$1.46 Trillion", export: "$578 Billion", import: "$604 Billion", perCapita: "$11,400", costOfLiving: "MXN 15,000 / month", internalDebt: "MXN 14 Trillion", externalDebt: "$450 Billion", banks: "BBVA México, Banorte" }, soc: { pop: "128.5 Million", food: "Corn, Tacos, Beans", popTrend: "+0.8% (Increasing)", languages: "Spanish", literacy: "95.4%", ratio: "96 M / 100 F", happiness: "36th / Global Index" } },
+            "Nigeria": { geo: { area: "923k sq km", land: "910k sq km", cultivable: "340k sq km", capital: "Abuja", majorCities: "Lagos, Kano, Ibadan, Abuja, Port Harcourt", airports: "Murtala Muhammed International Airport, Nnamdi Azikiwe International Airport" }, trend: { temp: "15°C to 45°C", humidity: "20% to 95%", rain: "500mm to 3000mm", snow: "0cm", wind: "0 to 60 km/h" }, econ: { currency: "Nigerian Naira (NGN)", rateToUSD: 1400, gdp: "$362 Billion", export: "$65 Billion", import: "$55 Billion", perCapita: "$1,600", costOfLiving: "NGN 200,000 / month", internalDebt: "NGN 50 Trillion", externalDebt: "$42 Billion", banks: "Access Bank, Zenith Bank" }, soc: { pop: "223.8 Million", food: "Yam, Cassava, Rice", popTrend: "+2.4% (Increasing)", languages: "English, Yoruba, Igbo", literacy: "62.0%", ratio: "102 M / 100 F", happiness: "118th / Global Index" } },
+            "Oman": { geo: { area: "309k sq km", land: "309k sq km", cultivable: "1k sq km", capital: "Muscat", majorCities: "Muscat, Salalah, Sohar, Nizwa", airports: "Muscat International Airport, Salalah Airport" }, trend: { temp: "10°C to 50°C", humidity: "10% to 90%", rain: "50mm to 200mm", snow: "0cm", wind: "0 to 80 km/h" }, econ: { currency: "Omani Rial (OMR)", rateToUSD: 0.38, gdp: "$108 Billion", export: "$60 Billion", import: "$35 Billion", perCapita: "$23,500", costOfLiving: "OMR 600 / month", internalDebt: "OMR 15 Billion", externalDebt: "$45 Billion", banks: "Bank Muscat" }, soc: { pop: "4.6 Million", food: "Shuwa, Rice, Dates", popTrend: "+1.8% (Increasing)", languages: "Arabic", literacy: "96.0%", ratio: "135 M / 100 F", happiness: "Unknown" } },
+            "Peru": { geo: { area: "1.28M sq km", land: "1.28M sq km", cultivable: "70k sq km", capital: "Lima", majorCities: "Lima, Arequipa, Trujillo, Chiclayo, Cusco", airports: "Jorge Chávez International Airport, Alejandro Velasco Astete International Airport" }, trend: { temp: "-10°C to 38°C", humidity: "20% to 95%", rain: "0mm to 3000mm", snow: "0cm to 150cm", wind: "0 to 70 km/h" }, econ: { currency: "Peruvian Sol (PEN)", rateToUSD: 3.75, gdp: "$267 Billion", export: "$65 Billion", import: "$55 Billion", perCapita: "$7,800", costOfLiving: "PEN 2,500 / month", internalDebt: "PEN 300 Billion", externalDebt: "$85 Billion", banks: "BCP, BBVA Perú" }, soc: { pop: "34.0 Million", food: "Ceviche, Potatoes, Rice", popTrend: "+1.0% (Increasing)", languages: "Spanish, Quechua", literacy: "94.5%", ratio: "99 M / 100 F", happiness: "75th / Global Index" } },
+            "Qatar": { geo: { area: "11.6k sq km", land: "11.6k sq km", cultivable: "1k sq km", capital: "Doha", majorCities: "Doha, Al Rayyan, Al Wakrah, Al Khor", airports: "Hamad International Airport" }, trend: { temp: "10°C to 50°C", humidity: "20% to 90%", rain: "50mm to 100mm", snow: "0cm", wind: "0 to 70 km/h" }, econ: { currency: "Qatari Riyal (QAR)", rateToUSD: 3.64, gdp: "$235 Billion", export: "$130 Billion", import: "$30 Billion", perCapita: "$81,000", costOfLiving: "QAR 10,000 / month", internalDebt: "QAR 300 Billion", externalDebt: "$110 Billion", banks: "QNB, Qatar Islamic Bank" }, soc: { pop: "3.0 Million", food: "Machboos, Seafood", popTrend: "+1.7% (Increasing)", languages: "Arabic", literacy: "95.7%", ratio: "265 M / 100 F", happiness: "Unknown" } },
+            "Russia": { geo: { area: "17.1M sq km", land: "16.3M sq km", cultivable: "1.22M sq km", capital: "Moscow", majorCities: "Moscow, St. Petersburg, Novosibirsk, Yekaterinburg, Kazan", airports: "Sheremetyevo International Airport, Domodedovo International Airport, Pulkovo Airport" }, trend: { temp: "-65°C to 40°C", humidity: "30% to 95%", rain: "100mm to 1500mm", snow: "50cm to 500cm", wind: "0 to 120 km/h" }, econ: { currency: "Russian Ruble (RUB)", rateToUSD: 90, gdp: "$2.02 Trillion", export: "$450 Billion", import: "$300 Billion", perCapita: "$14,000", costOfLiving: "RUB 70,000 / month", internalDebt: "RUB 20 Trillion", externalDebt: "$300 Billion", banks: "Sberbank, VTB" }, soc: { pop: "144.1 Million", food: "Bread, Potatoes, Pork", popTrend: "-0.2% (Decreasing)", languages: "Russian", literacy: "99.7%", ratio: "86 M / 100 F", happiness: "70th / Global Index" } },
+            "Saudi Arabia": { geo: { area: "2.15M sq km", land: "2.15M sq km", cultivable: "35k sq km", capital: "Riyadh", majorCities: "Riyadh, Jeddah, Mecca, Medina, Dammam", airports: "King Khalid International Airport, King Abdulaziz International Airport, King Fahd International Airport" }, trend: { temp: "0°C to 50°C", humidity: "10% to 80%", rain: "50mm to 300mm", snow: "0cm (rare in North)", wind: "0 to 90 km/h" }, econ: { currency: "Saudi Riyal (SAR)", rateToUSD: 3.75, gdp: "$1.06 Trillion", export: "$300 Billion", import: "$150 Billion", perCapita: "$29,000", costOfLiving: "SAR 5,000 / month", internalDebt: "SAR 900 Billion", externalDebt: "$200 Billion", banks: "Al Rajhi Bank, SNB" }, soc: { pop: "36.9 Million", food: "Kabsa, Dates, Lamb", popTrend: "+1.5% (Increasing)", languages: "Arabic", literacy: "95.3%", ratio: "123 M / 100 F", happiness: "30th / Global Index" } },
+            "Taiwan": { geo: { area: "36,193 sq km", land: "32,260 sq km", cultivable: "8,200 sq km", capital: "Taipei", majorCities: "Taipei, Kaohsiung, Taichung, Tainan, Hsinchu", airports: "Taiwan Taoyuan International Airport, Kaohsiung International Airport" }, trend: { temp: "5°C to 38°C", humidity: "70% to 90%", rain: "1500mm to 2500mm", snow: "0cm to 10cm", wind: "0 to 150 km/h" }, econ: { currency: "New Taiwan Dollar (TWD)", rateToUSD: 31.47, gdp: "$755 Billion", export: "$432 Billion", import: "$352 Billion", perCapita: "$32,500", costOfLiving: "NT$ 32,000 / month", internalDebt: "NT$ 6.5 Trillion", externalDebt: "$195 Billion", banks: "Bank of Taiwan, CTBC Bank" }, soc: { pop: "23.4 Million", food: "Rice, Pork, Seafood", popTrend: "-0.1% (Decreasing)", languages: "Mandarin Chinese, Hokkien", literacy: "99.0%", ratio: "98 M / 100 F", happiness: "31st / Global Index" } },
+            "United States": { geo: { area: "9.83M sq km", land: "9.15M sq km", cultivable: "1.60M sq km", capital: "Washington, D.C.", majorCities: "New York, Los Angeles, Chicago, Houston, Phoenix", airports: "John F. Kennedy International Airport, O'Hare International Airport, Dallas/Fort Worth International Airport" }, trend: { temp: "-50°C to 56°C", humidity: "10% to 90%", rain: "0mm to 2500mm", snow: "0cm to 400cm", wind: "0 to 120 km/h" }, econ: { currency: "US Dollar (USD)", rateToUSD: 1.0, gdp: "$27.36 Trillion", export: "$2.01 Trillion", import: "$3.13 Trillion", perCapita: "$80,000", costOfLiving: "$3,200 / month", internalDebt: "$34 Trillion", externalDebt: "$25 Trillion", banks: "JPMorgan Chase, Bank of America" }, soc: { pop: "334.9 Million", food: "Wheat, Corn, Beef", popTrend: "+0.5% (Increasing)", languages: "English, Spanish", literacy: "99.0%", ratio: "98 M / 100 F", happiness: "23rd / Global Index" } },
+            "United Kingdom": { geo: { area: "242k sq km", land: "241k sq km", cultivable: "60k sq km", capital: "London", majorCities: "London, Birmingham, Manchester, Glasgow, Edinburgh", airports: "Heathrow Airport, Gatwick Airport" }, trend: { temp: "-27°C to 40°C", humidity: "60% to 95%", rain: "500mm to 2000mm", snow: "0cm to 50cm", wind: "5 to 130 km/h" }, econ: { currency: "British Pound (GBP)", rateToUSD: 0.738, gdp: "$3.33 Trillion", export: "$510 Billion", import: "$810 Billion", perCapita: "$46,000", costOfLiving: "£2,400 / month", internalDebt: "£2.6 Trillion", externalDebt: "$8.5 Trillion", banks: "HSBC, Barclays, Lloyds Bank" }, soc: { pop: "67.7 Million", food: "Potatoes, Wheat, Beef", popTrend: "+0.3% (Increasing)", languages: "English", literacy: "99.0%", ratio: "97 M / 100 F", happiness: "20th / Global Index" } },
+            "Uganda": { geo: { area: "241k sq km", land: "200k sq km", cultivable: "170k sq km", capital: "Kampala", majorCities: "Kampala, Nansana, Kira, Mbarara, Gulu", airports: "Entebbe International Airport" }, trend: { temp: "15°C to 35°C", humidity: "40% to 90%", rain: "500mm to 2000mm", snow: "0cm", wind: "0 to 60 km/h" }, econ: { currency: "Ugandan Shilling (UGX)", rateToUSD: 3800, gdp: "$49 Billion", export: "$4 Billion", import: "$8 Billion", perCapita: "$1,000", costOfLiving: "UGX 1.5M / month", internalDebt: "UGX 35 Trillion", externalDebt: "$12 Billion", banks: "Stanbic Bank Uganda" }, soc: { pop: "48.6 Million", food: "Matoke, Posho", popTrend: "+3.2% (Increasing)", languages: "English, Swahili", literacy: "76.5%", ratio: "99 M / 100 F", happiness: "117th / Global Index" } },
+            "Vietnam": { geo: { area: "331k sq km", land: "310k sq km", cultivable: "75k sq km", capital: "Hanoi", majorCities: "Ho Chi Minh City, Hanoi, Da Nang, Hai Phong, Can Tho", airports: "Tan Son Nhat International Airport, Noi Bai International Airport" }, trend: { temp: "5°C to 40°C", humidity: "60% to 95%", rain: "1000mm to 2500mm", snow: "0cm to 5cm (Sapa)", wind: "0 to 130 km/h (Typhoons)" }, econ: { currency: "Vietnamese Dong (VND)", rateToUSD: 25400, gdp: "$430 Billion", export: "$371 Billion", import: "$358 Billion", perCapita: "$4,300", costOfLiving: "VND 15M / month", internalDebt: "VND 3,000 Trillion", externalDebt: "$130 Billion", banks: "Vietcombank, BIDV" }, soc: { pop: "98.9 Million", food: "Rice, Pho, Seafood", popTrend: "+0.8% (Increasing)", languages: "Vietnamese", literacy: "95.8%", ratio: "99 M / 100 F", happiness: "65th / Global Index" } },
+            "Yemen": { geo: { area: "527k sq km", land: "527k sq km", cultivable: "15k sq km", capital: "Sanaa", majorCities: "Sanaa, Aden, Taiz, Al Hudaydah", airports: "Sana'a International Airport, Aden International Airport" }, trend: { temp: "10°C to 45°C", humidity: "10% to 80%", rain: "50mm to 500mm", snow: "0cm", wind: "0 to 70 km/h" }, econ: { currency: "Yemeni Rial (YER)", rateToUSD: 250, gdp: "$21 Billion", export: "$1.5 Billion", import: "$4 Billion", perCapita: "$600", costOfLiving: "YER 150,000 / month", internalDebt: "Unknown", externalDebt: "$7 Billion", banks: "Central Bank of Yemen" }, soc: { pop: "34.4 Million", food: "Mandi, Saltah", popTrend: "+2.2% (Increasing)", languages: "Arabic", literacy: "70.0%", ratio: "102 M / 100 F", happiness: "142nd / Global Index" } },
+            "Zambia": { geo: { area: "752k sq km", land: "743k sq km", cultivable: "270k sq km", capital: "Lusaka", majorCities: "Lusaka, Kitwe, Ndola, Kabwe", airports: "Kenneth Kaunda International Airport" }, trend: { temp: "10°C to 35°C", humidity: "20% to 80%", rain: "500mm to 1400mm", snow: "0cm", wind: "0 to 60 km/h" }, econ: { currency: "Zambian Kwacha (ZMW)", rateToUSD: 27, gdp: "$28 Billion", export: "$11 Billion", import: "$9 Billion", perCapita: "$1,400", costOfLiving: "ZMW 8,000 / month", internalDebt: "ZMW 200 Billion", externalDebt: "$13 Billion", banks: "Zanaco, Standard Chartered" }, soc: { pop: "20.5 Million", food: "Nshima, Maize", popTrend: "+2.8% (Increasing)", languages: "English, Bemba", literacy: "87.5%", ratio: "98 M / 100 F", happiness: "134th / Global Index" } },
+            "Zimbabwe": { geo: { area: "390k sq km", land: "386k sq km", cultivable: "42k sq km", capital: "Harare", majorCities: "Harare, Bulawayo, Chitungwiza, Mutare", airports: "Robert Gabriel Mugabe International Airport, Joshua Mqabuko Nkomo International Airport" }, trend: { temp: "5°C to 35°C", humidity: "20% to 80%", rain: "400mm to 1000mm", snow: "0cm", wind: "0 to 60 km/h" }, econ: { currency: "Zimbabwean Gold (ZiG)", rateToUSD: 13.5, gdp: "$26 Billion", export: "$6 Billion", import: "$8 Billion", perCapita: "$1,600", costOfLiving: "ZiG 6,000 / month", internalDebt: "ZiG 40 Billion", externalDebt: "$14 Billion", banks: "CBZ Bank, Stanbic" }, soc: { pop: "16.6 Million", food: "Sadza, Maize", popTrend: "+2.0% (Increasing)", languages: "English, Shona", literacy: "89.7%", ratio: "95 M / 100 F", happiness: "138th / Global Index" } }
+        };
+
+        // ISO-3166-1 alpha-2 codes used to constrain facility searches to the selected target country.
+        const countryIso2 = {
+            "Afghanistan":"AF", "Argentina":"AR", "Australia":"AU", "Brazil":"BR",
+            "Canada":"CA", "China":"CN", "Denmark":"DK", "Egypt":"EG",
+            "France":"FR", "Germany":"DE", "Hungary":"HU", "India":"IN",
+            "Japan":"JP", "Kenya":"KE", "Lebanon":"LB", "Mexico":"MX",
+            "Nigeria":"NG", "Oman":"OM", "Peru":"PE", "Qatar":"QA",
+            "Russia":"RU", "Saudi Arabia":"SA", "Taiwan":"TW", "Uganda":"UG",
+            "United Kingdom":"GB", "United States":"US", "Vietnam":"VN",
+            "Yemen":"YE", "Zambia":"ZM", "Zimbabwe":"ZW"
+        };
+
+        const capitalCoords = {
+            "Afghanistan": { lat: 34.5281, lon: 69.1723 },
+            "Argentina": { lat: -34.6037, lon: -58.3816 },
+            "Australia": { lat: -35.2809, lon: 149.1300 },
+            "Brazil": { lat: -15.7975, lon: -47.8919 },
+            "Canada": { lat: 45.4215, lon: -75.6972 },
+            "China": { lat: 39.9042, lon: 116.4074 },
+            "Denmark": { lat: 55.6761, lon: 12.5683 },
+            "Egypt": { lat: 30.0444, lon: 31.2357 },
+            "France": { lat: 48.8566, lon: 2.3522 },
+            "Germany": { lat: 52.5200, lon: 13.4050 },
+            "Hungary": { lat: 47.4979, lon: 19.0402 },
+            "India": { lat: 28.6139, lon: 77.2090 },
+            "Japan": { lat: 35.6762, lon: 139.6503 },
+            "Kenya": { lat: -1.2864, lon: 36.8172 },
+            "Lebanon": { lat: 33.8938, lon: 35.5018 },
+            "Mexico": { lat: 19.4326, lon: -99.1332 },
+            "Nigeria": { lat: 9.0579, lon: 7.4951 },
+            "Oman": { lat: 23.5859, lon: 58.4059 },
+            "Peru": { lat: -12.0464, lon: -77.0428 },
+            "Qatar": { lat: 25.2854, lon: 51.5310 },
+            "Russia": { lat: 55.7558, lon: 37.6173 },
+            "Saudi Arabia": { lat: 24.7136, lon: 46.6753 },
+            "Taiwan": { lat: 25.0330, lon: 121.5654 },
+            "Uganda": { lat: 0.3476, lon: 32.5825 },
+            "United Kingdom": { lat: 51.5074, lon: -0.1278 },
+            "United States": { lat: 38.8951, lon: -77.0364 },
+            "Vietnam": { lat: 21.0285, lon: 105.8542 },
+            "Yemen": { lat: 15.3694, lon: 44.1910 },
+            "Zambia": { lat: -15.3875, lon: 28.3228 },
+            "Zimbabwe": { lat: -17.8216, lon: 31.0492 }
+        };
+
+        window.onload = function() {
+            const targetSelect = document.getElementById("countrySelect");
+            const homeSelect = document.getElementById("homeCountrySelect");
+            const sortedCountries = Object.keys(countryData).sort();
+
+            sortedCountries.forEach(countryName => {
+                const optionTarget = document.createElement("option");
+                optionTarget.value = countryName;
+                optionTarget.textContent = countryName;
+                targetSelect.appendChild(optionTarget);
+
+                const optionHome = document.createElement("option");
+                optionHome.value = countryName;
+                optionHome.textContent = countryName;
+                homeSelect.appendChild(optionHome);
+            });
+
+            const facilityLocationMode = document.getElementById("facilityLocationMode");
+            if (facilityLocationMode) {
+                facilityLocationMode.addEventListener("change", updateFacilityLocationModeNote);
+                updateFacilityLocationModeNote();
+            }
+
+            const airportSelect = document.getElementById("worldAirportSelect");
+            if (airportSelect) {
+                airportSelect.addEventListener("change", function() {
+                    if (worldAirportReference) {
+                        chooseAirportCandidate(this.value, worldAirportReference);
+                    }
+                });
+            }
+
+        };
+
+        function toggleSection(contentId, iconId) {
+            const content = document.getElementById(contentId);
+            const toggleIcon = document.getElementById(iconId);
+            if (!content || !toggleIcon) return;
+
+            if (content.style.display === "block") {
+                content.style.display = "none";
+                toggleIcon.textContent = "▼ Click to Expand";
+            } else {
+                content.style.display = "block";
+                toggleIcon.textContent = "▲ Click to Collapse";
+            }
+        }
+
+        function toggleMapSection() {
+            toggleSection("mapCollapsibleContent", "mapToggleIcon");
+        }
+
+
+
+        function toggleFacilitySection(contentId, iconId) {
+            const content = document.getElementById(contentId);
+            const icon = document.getElementById(iconId);
+            if (!content || !icon) return;
+            const isOpen = content.style.display === "block";
+            content.style.display = isOpen ? "none" : "block";
+            icon.textContent = isOpen ? "▼ Click to Expand" : "▲ Click to Collapse";
+        }
+
+        let locationTimerInterval = null;
+        let locationTimerStartedAt = 0;
+        let locationTimerType = null;
+
+        function startLocationDetectionTimer(type) {
+            const overlay = document.getElementById("locationTimerOverlay");
+            const secondsEl = document.getElementById("locationTimerSeconds");
+            const inlineId = type === "airport" ? "airportLocationTimer" : "railLocationTimer";
+            const inlineSecondsId = type === "airport" ? "airportLocationTimerSeconds" : "railLocationTimerSeconds";
+            const inline = document.getElementById(inlineId);
+            const inlineSeconds = document.getElementById(inlineSecondsId);
+
+            locationTimerType = type;
+            locationTimerStartedAt = performance.now();
+            if (secondsEl) secondsEl.textContent = "0.0 s";
+            if (inlineSeconds) inlineSeconds.textContent = "0.0 s";
+
+            if (overlay) {
+                overlay.style.setProperty("display", "flex", "important");
+                overlay.setAttribute("aria-busy", "true");
+            }
+            if (inline) inline.classList.add("active");
+
+            clearInterval(locationTimerInterval);
+            locationTimerInterval = setInterval(() => {
+                const elapsed = Math.max(0, (performance.now() - locationTimerStartedAt) / 1000);
+                const text = `${elapsed.toFixed(1)} s`;
+                if (secondsEl) secondsEl.textContent = text;
+                if (inlineSeconds) inlineSeconds.textContent = text;
+            }, 100);
+        }
+
+        function stopLocationDetectionTimer(type) {
+            const overlay = document.getElementById("locationTimerOverlay");
+            clearInterval(locationTimerInterval);
+            locationTimerInterval = null;
+            const timerType = type || locationTimerType;
+            const inlineId = timerType === "airport" ? "airportLocationTimer" : "railLocationTimer";
+            const inline = document.getElementById(inlineId);
+            if (inline) inline.classList.remove("active");
+            if (overlay) {
+                overlay.style.setProperty("display", "none", "important");
+                overlay.setAttribute("aria-busy", "false");
+            }
+            locationTimerType = null;
+        }
+
+        async function getWorldUserLocation(type) {
+            startLocationDetectionTimer(type);
+            // Keep the timer visible for at least one rendered frame before the native
+            // browser geolocation request is made. The inline timer also remains visible
+            // if the browser's permission dialog temporarily interrupts page rendering.
+            await new Promise(resolve => setTimeout(resolve, 250));
+            try {
+                return await new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject(new Error("Geolocation is not supported by this browser."));
+                        return;
+                    }
+
+                    navigator.geolocation.getCurrentPosition(
+                        position => {
+                            const lat = Number(position.coords.latitude);
+                            const lon = Number(position.coords.longitude);
+                            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                                reject(new Error("The browser returned an invalid location."));
+                                return;
+                            }
+                            resolve({ lat, lon });
+                        },
+                        error => {
+                            let message = "Unable to determine your current location.";
+                            if (error && error.code === 1) message = "Location permission was denied. Please allow location access and try again.";
+                            else if (error && error.code === 2) message = "Your current location could not be determined.";
+                            else if (error && error.code === 3) message = "Location request timed out. Please try again.";
+                            reject(new Error(message));
+                        },
+                        { enableHighAccuracy: true, timeout: 30000, maximumAge: 30000 }
+                    );
+                });
+            } finally {
+                stopLocationDetectionTimer(type);
+            }
+        }
+
+        function worldHaversineKm(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const toRad = value => value * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat / 2) ** 2 +
+                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        async function worldFetchWithTimeout(url, timeoutMs = 15000) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const response = await fetch(url, { method: "GET", cache: "no-store", signal: controller.signal });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        async function worldOverpassJson(query) {
+            const encoded = encodeURIComponent(query);
+            const endpoints = [
+                `https://overpass-api.de/api/interpreter?data=${encoded}`,
+                `https://overpass.kumi.systems/api/interpreter?data=${encoded}`,
+                `https://overpass.private.coffee/api/interpreter?data=${encoded}`
+            ];
+
+            const attempts = endpoints.map(async url => {
+                const response = await worldFetchWithTimeout(url, 15000);
+                return response.json();
+            });
+
+            if (Promise.any) {
+                try {
+                    return await Promise.any(attempts);
+                } catch (_) {
+                    throw new Error("Live map facility service is temporarily unavailable.");
+                }
+            }
+
+            for (const attempt of attempts) {
+                try { return await attempt; } catch (_) {}
+            }
+            throw new Error("Live map facility service is temporarily unavailable.");
+        }
+
+        async function worldNominatimSearch(lat, lon, type, targetCountry) {
+            const iso2 = countryIso2[targetCountry] || "";
+            const query = type === "airport" ? "airport" : "railway station";
+            const params = new URLSearchParams({
+                format: "jsonv2",
+                q: query,
+                limit: "50",
+                addressdetails: "1"
+            });
+            if (iso2) params.set("countrycodes", iso2.toLowerCase());
+
+            const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`;
+            const response = await worldFetchWithTimeout(url, 15000);
+            const results = await response.json();
+            const candidates = (Array.isArray(results) ? results : []).map(item => {
+                const rlat = Number(item.lat);
+                const rlon = Number(item.lon);
+                if (!Number.isFinite(rlat) || !Number.isFinite(rlon)) return null;
+
+                const cls = String(item.class || "").toLowerCase();
+                const typ = String(item.type || "").toLowerCase();
+                const category = String(item.category || "").toLowerCase();
+                const name = item.name || item.display_name || "";
+                const resultCountryCode = String(item.address?.country_code || "").toLowerCase();
+
+                // When an ISO code is available, enforce the target-country restriction.
+                if (iso2 && resultCountryCode && resultCountryCode !== iso2.toLowerCase()) return null;
+
+                if (type === "airport") {
+                    const airportLike = cls === "aeroway" || typ.includes("airport") ||
+                        typ.includes("aerodrome") || category === "aeroway" ||
+                        /airport|aerodrome|airfield|airstrip/i.test(name);
+                    if (!airportLike) return null;
+                } else {
+                    const railLike = cls === "railway" || typ.includes("station") ||
+                        typ.includes("halt") || /railway station|rail station|station|halt/i.test(name);
+                    if (!railLike) return null;
+                }
+
+                return {
+                    name: item.name || item.display_name || (type === "airport" ? "Nearest airport" : "Nearest railway station"),
+                    lat: rlat,
+                    lon: rlon,
+                    distance: worldHaversineKm(lat, lon, rlat, rlon)
+                };
+            }).filter(Boolean);
+
+            candidates.sort((a, b) => a.distance - b.distance);
+            return candidates[0] || null;
+        }
+
+        let worldAirportCandidates = [];
+        let worldAirportTargetCountry = "";
+        let worldAirportReference = null;
+
+        function setAirportSelectMessage(message) {
+            const select = document.getElementById("worldAirportSelect");
+            if (!select) return;
+            select.innerHTML = "";
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = message;
+            select.appendChild(option);
+            select.disabled = true;
+        }
+
+        function populateAirportSelect(candidates, selectedName = "") {
+            const select = document.getElementById("worldAirportSelect");
+            if (!select) return;
+            select.innerHTML = "";
+            if (!candidates.length) {
+                setAirportSelectMessage("No mapped airports identified in this target country");
+                return;
+            }
+            candidates.forEach((airport, index) => {
+                const option = document.createElement("option");
+                option.value = String(index);
+                option.textContent = `${airport.name} — ${airport.distance.toFixed(1)} km`;
+                if (airport.name === selectedName) option.selected = true;
+                select.appendChild(option);
+            });
+            select.disabled = false;
+        }
+
+        async function geocodeNamedCountryAirport(airportName, targetCountry, iso2) {
+            try {
+                const params = new URLSearchParams({
+                    format: "jsonv2",
+                    q: `${airportName}, ${targetCountry}`,
+                    limit: "5",
+                    addressdetails: "1"
+                });
+                if (iso2) params.set("countrycodes", iso2.toLowerCase());
+                const response = await worldFetchWithTimeout(`https://nominatim.openstreetmap.org/search?${params.toString()}`, 15000);
+                const results = await response.json();
+                const candidates = (Array.isArray(results) ? results : []).map(item => {
+                    const lat = Number(item.lat);
+                    const lon = Number(item.lon);
+                    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+                    const resultCountryCode = String(item.address?.country_code || "").toLowerCase();
+                    if (iso2 && resultCountryCode && resultCountryCode !== iso2.toLowerCase()) return null;
+                    const text = `${item.display_name || ""} ${item.type || ""} ${item.class || ""}`.toLowerCase();
+                    if (!/(airport|aerodrome|airfield|airstrip)/i.test(text)) return null;
+                    return {
+                        name: item.name || airportName,
+                        lat,
+                        lon
+                    };
+                }).filter(Boolean);
+                return candidates[0] || null;
+            } catch (error) {
+                console.warn(`Airport geocoding failed for ${airportName}:`, error);
+                return null;
+            }
+        }
+
+        async function worldQueryAllCountryAirports(targetCountry) {
+            const iso2 = countryIso2[targetCountry];
+            if (!iso2 || !countryData[targetCountry]) return [];
+
+            const merged = [];
+            const seen = new Set();
+            const addAirport = airport => {
+                if (!airport || !Number.isFinite(airport.lat) || !Number.isFinite(airport.lon) || !airport.name) return;
+                const key = `${airport.name.toLowerCase()}|${airport.lat.toFixed(4)}|${airport.lon.toFixed(4)}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+                merged.push({ name: airport.name, lat: airport.lat, lon: airport.lon });
+            };
+
+            // First use the airports already identified in the dashboard's country data.
+            // This guarantees that the dropdown does not become empty merely because a
+            // live Overpass server is slow or temporarily unavailable.
+            const seedNames = String(countryData[targetCountry].geo.airports || "")
+                .split(/\s*,\s*/)
+                .map(name => name.trim())
+                .filter(Boolean);
+
+            const geocodedSeeds = await Promise.all(seedNames.map(name => geocodeNamedCountryAirport(name, targetCountry, iso2)));
+            geocodedSeeds.forEach(addAirport);
+
+            // Then enrich the list with all named public aerodromes returned by OSM.
+            const queries = [
+                `[out:json][timeout:60];area["ISO3166-1"="${iso2}"]["admin_level"="2"]->.searchArea;nwr(area.searchArea)["aeroway"="aerodrome"];out center tags;`,
+                `[out:json][timeout:60];area["ISO3166-1"="${iso2}"]->.searchArea;nwr(area.searchArea)["aeroway"="aerodrome"];out center tags;`
+            ];
+
+            for (const query of queries) {
+                try {
+                    const data = await worldOverpassJson(query);
+                    (data.elements || []).forEach(element => {
+                        const lat = Number.isFinite(Number(element.lat)) ? Number(element.lat) : Number(element.center?.lat);
+                        const lon = Number.isFinite(Number(element.lon)) ? Number(element.lon) : Number(element.center?.lon);
+                        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+                        const tags = element.tags || {};
+                        if (String(tags.access || "").toLowerCase() === "private") return;
+                        const name = tags.name || tags["name:en"];
+                        if (!name) return;
+                        addAirport({ name, lat, lon });
+                    });
+                    if (merged.length) break;
+                } catch (error) {
+                    console.warn("Country airport search failed:", error);
+                }
+            }
+
+            return merged;
+        }
+
+        async function loadTargetCountryAirports(targetCountry, requestGeneration = dashboardGeneration) {
+            if (!targetCountry || !countryData[targetCountry]) {
+                worldAirportCandidates = [];
+                worldAirportTargetCountry = "";
+                setAirportSelectMessage("Select a target country first");
+                return;
+            }
+            if (worldAirportTargetCountry === targetCountry && worldAirportCandidates.length) {
+                return worldAirportCandidates;
+            }
+            setAirportSelectMessage(`Identifying airports in ${targetCountry}...`);
+            const raw = await worldQueryAllCountryAirports(targetCountry);
+            if (requestGeneration !== dashboardGeneration) return [];
+            worldAirportTargetCountry = targetCountry;
+            worldAirportCandidates = raw;
+            if (raw.length) {
+                populateAirportSelect(raw.map(a => ({...a, distance: 0})));
+            } else {
+                setAirportSelectMessage(`No mapped airports could be located inside ${targetCountry}`);
+            }
+            return raw;
+        }
+
+        function chooseAirportCandidate(index, reference) {
+            const candidate = worldAirportCandidates[Number(index)];
+            if (!candidate || !reference) return false;
+            const facilityEl = document.getElementById("worldNearestAirport");
+            const distanceEl = document.getElementById("worldAirportDistance");
+            const locationEl = document.getElementById("worldUserLocationAirport");
+            const route = document.getElementById("worldAirportRoute");
+            const status = document.getElementById("worldAirportStatus");
+            if (!facilityEl || !distanceEl || !locationEl || !route) return false;
+            const distance = worldHaversineKm(reference.lat, reference.lon, candidate.lat, candidate.lon);
+            facilityEl.textContent = candidate.name;
+            distanceEl.textContent = `${distance.toFixed(2)} km from ${reference.label} (straight-line)`;
+            locationEl.textContent = reference.description;
+            const origin = `${reference.lat},${reference.lon}`;
+            const destination = `${candidate.lat},${candidate.lon}`;
+            route.href = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=driving`;
+            route.textContent = `Open Route from ${reference.label} to ${candidate.name} in Google Maps`;
+            if (status) status.textContent = `Selected airport: ${candidate.name}`;
+            return true;
+        }
+
+        async function worldQueryNearestFacility(lat, lon, type, targetCountry) {
+            const iso2 = countryIso2[targetCountry];
+            const radii = [10000, 30000, 60000, 120000, 250000, 500000];
+
+            // For My Location mode, search ONLY within the selected target country's
+            // OSM administrative area. This prevents a nearby airport in another
+            // country from being selected.
+            const queryForRadius = radius => {
+                if (!iso2) return type === "airport"
+                    ? `[out:json][timeout:30];nwr(around:${radius},${lat},${lon})["aeroway"~"aerodrome|heliport"];out center tags;`
+                    : `[out:json][timeout:30];nwr(around:${radius},${lat},${lon})["railway"~"station|halt"];out center tags;`;
+
+                const featureFilter = type === "airport"
+                    ? `["aeroway"~"aerodrome|heliport"]`
+                    : `["railway"~"station|halt"]`;
+
+                return `[out:json][timeout:30];area["ISO3166-1"="${iso2}"]["boundary"="administrative"]->.searchArea;` +
+                       `nwr(around:${radius},${lat},${lon})(area.searchArea)${featureFilter};out center tags;`;
+            };
+
+            for (const radius of radii) {
+                try {
+                    const data = await worldOverpassJson(queryForRadius(radius));
+                    const elements = (data.elements || []).map(element => {
+                        const elat = Number.isFinite(Number(element.lat)) ? Number(element.lat) : Number(element.center?.lat);
+                        const elon = Number.isFinite(Number(element.lon)) ? Number(element.lon) : Number(element.center?.lon);
+                        if (!Number.isFinite(elat) || !Number.isFinite(elon)) return null;
+                        const tags = element.tags || {};
+                        if (String(tags.access || "").toLowerCase() === "private") return null;
+                        return {
+                            name: tags.name || tags["name:en"] || (type === "airport" ? "Nearest airport (name not listed)" : "Nearest railway station (name not listed)"),
+                            lat: elat,
+                            lon: elon,
+                            distance: worldHaversineKm(lat, lon, elat, elon)
+                        };
+                    }).filter(Boolean);
+
+                    if (!elements.length) continue;
+                    elements.sort((a, b) => a.distance - b.distance);
+                    const named = elements.filter(item => item.name && !/name not listed/i.test(item.name));
+                    return named[0] || elements[0];
+                } catch (error) {
+                    console.warn(`Overpass ${type} search failed at ${radius / 1000} km:`, error);
+                }
+            }
+
+            try {
+                return await worldNominatimSearch(lat, lon, type, targetCountry);
+            } catch (error) {
+                console.warn(`Nominatim ${type} search failed:`, error);
+                return null;
+            }
+        }
+
+        async function findWorldNearestFacility(type) {
+            const requestGeneration = dashboardGeneration;
+            const airport = type === "airport";
+            const contentId = airport ? "airportPathContent" : "railPathContent";
+            const iconId = airport ? "airportPathIcon" : "railPathIcon";
+            const locationId = airport ? "worldUserLocationAirport" : "worldUserLocationRail";
+            const facilityId = airport ? "worldNearestAirport" : "worldNearestRail";
+            const distanceId = airport ? "worldAirportDistance" : "worldRailDistance";
+            const routeId = airport ? "worldAirportRoute" : "worldRailRoute";
+            const statusId = airport ? "worldAirportStatus" : "worldRailStatus";
+            const button = document.querySelector(`#${contentId} .location-btn`);
+
+            const content = document.getElementById(contentId);
+            const icon = document.getElementById(iconId);
+            if (content) {
+                content.style.display = "block";
+                if (icon) icon.textContent = "▲ Click to Collapse";
+            }
+
+            const targetCountry = document.getElementById("countrySelect").value;
+            const mode = document.getElementById("facilityLocationMode")?.value || "target";
+            const modeNote = document.getElementById("facilityLocationModeNote");
+
+            if (!targetCountry || !countryData[targetCountry]) {
+                const message = "Please select a target country first.";
+                document.getElementById(facilityId).textContent = message;
+                document.getElementById(distanceId).textContent = "--";
+                document.getElementById(locationId).textContent = "--";
+                if (document.getElementById(statusId)) document.getElementById(statusId).textContent = message;
+                return;
+            }
+
+            const data = countryData[targetCountry];
+            let referenceLocation;
+            let referenceLabel;
+            let referenceDescription;
+            let useMyLocation = mode === "my";
+
+            if (useMyLocation) {
+                if (modeNote) modeNote.textContent = "Your browser's current location will be used as the reference point.";
+                referenceLabel = "My Location";
+                if (modeNote) modeNote.textContent = `Your current location will be used, but the ${airport ? "airport" : "railway station"} must be inside ${targetCountry}.`;
+                if (button) {
+                    button.disabled = true;
+                    button.textContent = "Detecting location...";
+                }
+                const status = document.getElementById(statusId);
+                if (status) status.textContent = "Detecting your current location...";
+                try {
+                    referenceLocation = await getWorldUserLocation(airport ? "airport" : "rail");
+                    if (requestGeneration !== dashboardGeneration) return;
+                    referenceDescription = `My Location (${referenceLocation.lat.toFixed(5)}, ${referenceLocation.lon.toFixed(5)})`;
+                } catch (error) {
+                    const message = error.message || "Unable to determine your current location.";
+                    document.getElementById(facilityId).textContent = message;
+                    document.getElementById(distanceId).textContent = "--";
+                    document.getElementById(locationId).textContent = "My Location";
+                    if (status) status.textContent = message;
+                    if (button) {
+                        button.disabled = false;
+                        button.textContent = airport ? "🌐 Find Nearest Airport" : "🌐 Find Nearest Railway Station";
+                    }
+                    return;
+                }
+            } else {
+                const capital = data.geo.capital;
+                const loc = capitalCoords[targetCountry];
+                if (modeNote) modeNote.textContent = "The selected target country's capital will be used as the reference location.";
+                referenceLabel = `${capital}, ${targetCountry}`;
+                referenceDescription = referenceLabel;
+
+                if (!loc || !Number.isFinite(loc.lat) || !Number.isFinite(loc.lon)) {
+                    const message = `Reference coordinates for ${capital}, ${targetCountry} are unavailable.`;
+                    document.getElementById(facilityId).textContent = message;
+                    document.getElementById(distanceId).textContent = "--";
+                    document.getElementById(locationId).textContent = referenceLabel;
+                    if (document.getElementById(statusId)) document.getElementById(statusId).textContent = message;
+                    return;
+                }
+                referenceLocation = { lat: loc.lat, lon: loc.lon };
+            }
+
+            if (button) {
+                button.disabled = true;
+                button.textContent = airport ? "Finding nearest airport..." : "Finding nearest railway station...";
+            }
+
+            const status = document.getElementById(statusId);
+
+            // Airports are first enumerated for the whole target country. The nearest
+            // airport is then selected from that country-wide list, so My Location can
+            // never accidentally choose an airport across the border.
+            if (airport) {
+                const candidates = await loadTargetCountryAirports(targetCountry, requestGeneration);
+                if (requestGeneration !== dashboardGeneration) return;
+                const ranked = candidates.map(item => ({
+                    ...item,
+                    distance: worldHaversineKm(referenceLocation.lat, referenceLocation.lon, item.lat, item.lon)
+                })).sort((a, b) => a.distance - b.distance);
+                worldAirportCandidates = candidates;
+                worldAirportReference = {
+                    lat: referenceLocation.lat, lon: referenceLocation.lon,
+                    label: referenceLabel, description: referenceDescription
+                };
+                if (!ranked.length) {
+                    const message = `No mapped airport was identified inside ${targetCountry}.`;
+                    document.getElementById(facilityId).textContent = message;
+                    document.getElementById(distanceId).textContent = "--";
+                    if (status) status.textContent = message;
+                    populateAirportSelect([]);
+                } else {
+                    populateAirportSelect(ranked, ranked[0].name);
+                    chooseAirportCandidate(candidates.findIndex(a => a.name === ranked[0].name), worldAirportReference);
+                }
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = "🌐 Find Nearest Airport";
+                }
+                return;
+            }
+            const locationEl = document.getElementById(locationId);
+            const facilityEl = document.getElementById(facilityId);
+            const distanceEl = document.getElementById(distanceId);
+            const route = document.getElementById(routeId);
+
+            locationEl.textContent = referenceDescription;
+            facilityEl.textContent = "Searching...";
+            distanceEl.textContent = "--";
+            route.href = "#";
+            route.textContent = "Route will appear after facility is found";
+            if (status) status.textContent = airport
+                ? `Searching for the nearest mapped airport from ${referenceLabel}...`
+                : `Searching for the nearest mapped railway station from ${referenceLabel}...`;
+
+            try {
+                const facility = await worldQueryNearestFacility(referenceLocation.lat, referenceLocation.lon, type, targetCountry);
+                if (requestGeneration !== dashboardGeneration) return;
+                if (!facility) {
+                    throw new Error(`No mapped ${airport ? "airport" : "railway station"} was found near the selected reference location.`);
+                }
+
+                facilityEl.textContent = facility.name;
+                distanceEl.textContent = `${facility.distance.toFixed(2)} km from ${referenceLabel} (straight-line)`;
+
+                const origin = `${referenceLocation.lat},${referenceLocation.lon}`;
+                const destination = `${facility.lat},${facility.lon}`;
+                route.href = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=driving`;
+                route.textContent = `Open Route from ${referenceLabel} to ${facility.name} in Google Maps`;
+                if (status) status.textContent = `Nearest ${airport ? "airport" : "railway station"} found successfully.`;
+            } catch (error) {
+                console.error(error);
+                const message = error.message || "Nearest facility data unavailable.";
+                facilityEl.textContent = message;
+                distanceEl.textContent = "--";
+                route.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${airport ? "airport" : "railway station"} near ${referenceLabel}`)}`;
+                route.textContent = `Search ${airport ? "airports" : "railway stations"} near ${referenceLabel} in Google Maps`;
+                if (status) status.textContent = message;
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = airport ? "🌐 Find Nearest Airport" : "🌐 Find Nearest Railway Station";
+                }
+            }
+        }
+
+        function updateFacilityLocationModeNote() {
+            const mode = document.getElementById("facilityLocationMode")?.value || "target";
+            const note = document.getElementById("facilityLocationModeNote");
+            if (note) {
+                note.textContent = mode === "my"
+                    ? "Your browser's current location will be used as the reference point."
+                    : "The selected target country's capital will be used as the reference location.";
+            }
+        }
+
+        // Incremented whenever the target country changes.  Any older asynchronous
+        // weather, currency, airport or other requests are prevented from writing
+        // stale data back into the dashboard.
+        let dashboardGeneration = 0;
+
+        function resetDashboardForTargetChange() {
+            // Cancel/ignore all in-flight dashboard updates from the previous country.
+            dashboardGeneration++;
+
+            // Reset every displayed value so no information from the previous target
+            // remains visible while the new country is loading.
+            const resetIds = [
+                "countryName",
+                "geoArea", "geoLand", "geoCultivable", "geoCapital", "geoMajorCities", "geoAirports",
+                "trendTemp", "trendHumidity", "trendRain", "trendSnow", "trendWind",
+                "predTemp", "predHumidity", "predRain", "predSnow", "predVisibility",
+                "econCurrency", "econGdp", "econExport", "econImport", "econPerCapita",
+                "econCostOfLiving", "econInternalDebt", "econExternalDebt", "econBanks",
+                "socPopulation", "socFood", "socTrend", "socLanguages", "socLiteracy", "socRatio", "socHappiness",
+                "worldUserLocationAirport", "worldNearestAirport", "worldAirportDistance",
+                "worldUserLocationRail", "worldNearestRail", "worldRailDistance",
+                "currTargetToHome", "currHomeToTarget"
+            ];
+
+            resetIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = "--";
+            });
+
+            const weatherTitle = document.getElementById("weatherPredictionLabel");
+            if (weatherTitle) weatherTitle.textContent = "Weather Prediction as of Today";
+
+            const mapTitle = document.getElementById("mapSectionTitle");
+            if (mapTitle) {
+                const span = mapTitle.querySelector("span");
+                if (span) span.textContent = "Capital City Map & 3D Street View";
+            }
+
+            const mapIframe = document.getElementById("mapIframe");
+            if (mapIframe) mapIframe.src = "";
+            const streetViewBtn = document.getElementById("streetViewBtn");
+            if (streetViewBtn) {
+                streetViewBtn.href = "#";
+            }
+
+            const airportStatus = document.getElementById("worldAirportStatus");
+            if (airportStatus) airportStatus.textContent = "Select a target country to identify airports.";
+            const railStatus = document.getElementById("worldRailStatus");
+            if (railStatus) railStatus.textContent = "Select a target country to search for a railway station.";
+
+            const airportRoute = document.getElementById("worldAirportRoute");
+            if (airportRoute) {
+                airportRoute.href = "#";
+                airportRoute.textContent = "Open Route in Google Maps";
+            }
+            const railRoute = document.getElementById("worldRailRoute");
+            if (railRoute) {
+                railRoute.href = "#";
+                railRoute.textContent = "Open Route in Google Maps";
+            }
+
+            const modeNote = document.getElementById("facilityLocationModeNote");
+            if (modeNote) {
+                modeNote.textContent = "Select a target country first.";
+            }
+
+            // Reset airport candidates and dropdown so the previous country's airports
+            // can never remain selectable.
+            worldAirportCandidates = [];
+            worldAirportTargetCountry = "";
+            worldAirportReference = null;
+            setAirportSelectMessage("Airports will be identified after the target country is selected");
+
+            // Reset the location-detection animation as well.
+            stopLocationDetectionTimer();
+        }
+
+        function handleTargetCountryChange() {
+            resetDashboardForTargetChange();
+
+            const targetCountry = document.getElementById("countrySelect")?.value || "";
+            if (targetCountry && countryData[targetCountry]) {
+                setAirportSelectMessage(`Identifying airports in ${targetCountry}...`);
+                // Start the new country update only after the old display has been cleared.
+                updateDashboard();
+                loadTargetCountryAirports(targetCountry, dashboardGeneration);
+            }
+        }
+
+        async function updateDashboard() {
+            const requestGeneration = dashboardGeneration;
+            const targetCountry = document.getElementById("countrySelect").value;
+            const homeCountry = document.getElementById("homeCountrySelect").value;
+            
+            const infoCard = document.getElementById("infoCard");
+            const emptyState = document.getElementById("emptyState");
+
+            if (targetCountry && countryData[targetCountry]) {
+                if (requestGeneration !== dashboardGeneration) return;
+                const data = countryData[targetCountry];
+                
+                document.getElementById("countryName").textContent = targetCountry;
+                document.getElementById("weatherPredictionLabel").textContent = `Weather Prediction for ${data.geo.capital} as of Today`;
+                document.getElementById("mapSectionTitle").querySelector("span").textContent = `${data.geo.capital} - Map & 3D Street View`;
+                
+                const mapIframe = document.getElementById("mapIframe");
+                const streetViewBtn = document.getElementById("streetViewBtn");
+                const loc = capitalCoords[targetCountry] || { lat: 0, lon: 0 };
+                
+                mapIframe.src = `https://www.google.com/maps?q=${loc.lat},${loc.lon}&output=embed&z=13`;
+                streetViewBtn.href = `https://www.google.com/maps/@${loc.lat},${loc.lon},17z/data=!3m1!1e3?entry=ttu`;
+
+                // Geography
+                document.getElementById("geoArea").textContent = data.geo.area;
+                document.getElementById("geoLand").textContent = data.geo.land;
+                document.getElementById("geoCultivable").textContent = data.geo.cultivable;
+                document.getElementById("geoCapital").textContent = data.geo.capital;
+                document.getElementById("geoMajorCities").textContent = data.geo.majorCities;
+                document.getElementById("geoAirports").textContent = data.geo.airports;
+
+                // Trends
+                document.getElementById("trendTemp").textContent = data.trend.temp;
+                document.getElementById("trendHumidity").textContent = data.trend.humidity;
+                document.getElementById("trendRain").textContent = data.trend.rain;
+                document.getElementById("trendSnow").textContent = data.trend.snow;
+                document.getElementById("trendWind").textContent = data.trend.wind;
+
+                // Economy
+                document.getElementById("econCurrency").textContent = data.econ.currency;
+                document.getElementById("econGdp").textContent = data.econ.gdp;
+                document.getElementById("econExport").textContent = data.econ.export;
+                document.getElementById("econImport").textContent = data.econ.import;
+                document.getElementById("econPerCapita").textContent = data.econ.perCapita;
+                document.getElementById("econCostOfLiving").textContent = data.econ.costOfLiving;
+                document.getElementById("econInternalDebt").textContent = data.econ.internalDebt;
+                document.getElementById("econExternalDebt").textContent = data.econ.externalDebt;
+                document.getElementById("econBanks").textContent = data.econ.banks;
+
+                // Society
+                document.getElementById("socPopulation").textContent = data.soc.pop;
+                document.getElementById("socFood").textContent = data.soc.food;
+                document.getElementById("socTrend").textContent = data.soc.popTrend;
+                document.getElementById("socLanguages").textContent = data.soc.languages;
+                document.getElementById("socLiteracy").textContent = data.soc.literacy;
+                document.getElementById("socRatio").textContent = data.soc.ratio;
+                document.getElementById("socHappiness").textContent = data.soc.happiness;
+
+                fetchLiveWeatherPrediction(targetCountry, requestGeneration);
+
+                emptyState.style.display = "none";
+                infoCard.style.display = "block";
+            }
+            
+            await calculateCurrency(targetCountry, homeCountry, requestGeneration);
+        }
+
+        async function calculateCurrency(targetCountry, homeCountry, requestGeneration = dashboardGeneration) {
+            if (requestGeneration !== dashboardGeneration) return;
+            const elTargetToHome = document.getElementById("currTargetToHome");
+            const elHomeToTarget = document.getElementById("currHomeToTarget");
+
+            if (!targetCountry || !homeCountry) {
+                elTargetToHome.textContent = "Please select both countries above.";
+                elHomeToTarget.textContent = "Please select both countries above.";
+                return;
+            }
+
+            const tData = countryData[targetCountry].econ;
+            const hData = countryData[homeCountry].econ;
+
+            const targetCode = tData.currency.match(/\(([^)]+)\)/)[1]; 
+            const homeCode = hData.currency.match(/\(([^)]+)\)/)[1];
+
+            if (targetCode === homeCode) {
+                elTargetToHome.textContent = `1 ${targetCode} = 1.000 ${homeCode}`;
+                elHomeToTarget.textContent = `1 ${homeCode} = 1.000 ${targetCode}`;
+                return;
+            }
+
+            elTargetToHome.textContent = "Fetching exchange rate...";
+            elHomeToTarget.textContent = "Fetching exchange rate...";
+
+            try {
+                const response = await fetch(`https://api.frankfurter.dev/v1/latest?base=${homeCode}&symbols=${targetCode}`);
+                const result = await response.json();
+
+                if (requestGeneration !== dashboardGeneration) return;
+                if (result && result.rates && result.rates[targetCode] !== undefined) {
+                    const rateHomeToTarget = result.rates[targetCode];
+                    const rateTargetToHome = 1 / rateHomeToTarget;
+
+                    elTargetToHome.textContent = `1 ${targetCode} = ${rateTargetToHome.toFixed(3)} ${homeCode}`;
+                    elHomeToTarget.textContent = `1 ${homeCode} = ${rateHomeToTarget.toFixed(3)} ${targetCode}`;
+                    return;
+                }
+                throw new Error("Currency pair not supported by live API");
+            } catch (e) {
+                if (requestGeneration !== dashboardGeneration) return;
+                const ratioTargetToHome = hData.rateToUSD / tData.rateToUSD;
+                const ratioHomeToTarget = tData.rateToUSD / hData.rateToUSD;
+
+                elTargetToHome.textContent = `1 ${targetCode} = ${ratioTargetToHome.toFixed(3)} ${homeCode}`;
+                elHomeToTarget.textContent = `1 ${homeCode} = ${ratioHomeToTarget.toFixed(3)} ${targetCode}`;
+            }
+        }
+
+        async function fetchLiveWeatherPrediction(countryName, requestGeneration = dashboardGeneration) {
+            const loc = capitalCoords[countryName] || { lat: 0, lon: 0 };
+
+            try {
+                const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,relative_humidity_2m,precipitation,snowfall,visibility,wind_speed_10m&timezone=auto`);
+                const weather = await response.json();
+                if (requestGeneration !== dashboardGeneration) return;
+
+                if (weather && weather.current) {
+                    document.getElementById("predTemp").textContent = `${weather.current.temperature_2m} °C`;
+                    document.getElementById("predHumidity").textContent = `${weather.current.relative_humidity_2m} %`;
+                    document.getElementById("predRain").textContent = `${weather.current.precipitation} mm`;
+                    document.getElementById("predSnow").textContent = `${weather.current.snowfall || 0} cm`;
+                    document.getElementById("predVisibility").textContent = `${(weather.current.visibility / 1000).toFixed(1)} km`;
+                } else {
+                    setFallbackWeather();
+                }
+            } catch (e) {
+                if (requestGeneration !== dashboardGeneration) return;
+                setFallbackWeather();
+            }
+        }
+
+        function setFallbackWeather() {
+            document.getElementById("predTemp").textContent = "Data unavailable";
+            document.getElementById("predHumidity").textContent = "Data unavailable";
+            document.getElementById("predRain").textContent = "Data unavailable";
+            document.getElementById("predSnow").textContent = "Data unavailable";
+            document.getElementById("predVisibility").textContent = "Data unavailable";
+        }
+    </script>
+</body>
+</html>
